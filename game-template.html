@@ -61,7 +61,7 @@
 <body>
     <div id="main-container">
         <div class="top-bar">
-            <a href="https://ysr.vercel.app">Ana Sayfaya Dön</a>
+            <a href="https://ysrgd.netlify.app">Ana Sayfaya Dön</a>
         </div>
         <div id="game-container">
             <div id="loading-message">Yükleniyor...</div>
@@ -88,24 +88,32 @@
                 fetch(gameUrl)
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                            throw new Error(`Network response was not ok: ${response.statusText}`);
                         }
                         return response.text();
                     })
                     .then(html => {
                         const assetBasePath = gameUrl.substring(0, gameUrl.lastIndexOf('/') + 1);
 
-                        // Regex to find relative paths in src and href attributes and make them absolute
-                        let modifiedHtml = html.replace(/(src|href)\s*=\s*"(?!https?:\/\/|\/)([^"]*)"/gi, `$1="${assetBasePath}$2"`);
-                        modifiedHtml = modifiedHtml.replace(/(src|href)\s*=\s*'(?!https?:\/\/|\/)([^']*)'/gi, `$1='${assetBasePath}$2'`);
+                        // Add a <base> tag to the head of the fetched HTML
+                        const baseTag = `<base href="${assetBasePath}">`;
+                        let modifiedHtml = html;
+                        if (modifiedHtml.includes('<head>')) {
+                            modifiedHtml = modifiedHtml.replace('<head>', `<head>${baseTag}`);
+                        } else {
+                            modifiedHtml = `<head>${baseTag}</head>${modifiedHtml}`;
+                        }
 
                         iframe.srcdoc = modifiedHtml;
-                        loadingMessage.style.display = 'none';
-                        iframe.style.display = 'block';
+
+                        iframe.onload = () => {
+                            loadingMessage.style.display = 'none';
+                            iframe.style.display = 'block';
+                        };
                     })
                     .catch(error => {
                         console.error('Error fetching game:', error);
-                        loadingMessage.textContent = 'Oyun yüklenemedi.';
+                        loadingMessage.textContent = 'Oyun yüklenemedi. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.';
                     });
             } else {
                 loadingMessage.textContent = 'Oyun bulunamadı. Lütfen ana sayfadan bir oyun seçin.';
