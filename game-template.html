@@ -104,7 +104,8 @@
                             modifiedHtml = `<head>${baseTag}</head>${modifiedHtml}`;
                         }
 
-                        iframe.srcdoc = modifiedHtml;
+                        const blob = new Blob([modifiedHtml], { type: 'text/html' });
+                        iframe.src = URL.createObjectURL(blob);
 
                         iframe.onload = () => {
                             loadingMessage.style.display = 'none';

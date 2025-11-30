@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allGames = [];
     const gameContainer = document.getElementById('game-container');
+    const searchBox = document.getElementById('search-box');
 
     function displayGames(gamesToShow) {
         gameContainer.innerHTML = '';
@@ -16,17 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function searchGames() {
+        const searchTerm = searchBox.value.toLowerCase();
+        const filteredGames = allGames.filter(game => game.name.toLowerCase().includes(searchTerm));
+        displayGames(filteredGames);
+    }
+
     fetch('games.json')
         .then(response => response.json())
         .then(games => {
             allGames = games;
             displayGames(allGames);
+            searchBox.addEventListener('keyup', searchGames);
         })
         .catch(error => console.error('Oyunlar yüklenirken hata oluştu:', error));
-
-    window.searchGames = () => {
-        const searchTerm = document.getElementById('search-box').value.toLowerCase();
-        const filteredGames = allGames.filter(game => game.name.toLowerCase().includes(searchTerm));
-        displayGames(filteredGames);
-    };
 });
