@@ -1,17 +1,17 @@
 [
   {
     "name": "12 Mini Battles",
-    "path": "cl12minibattles.html",
+    "path": "game-template.html?game=cl12minibattles.html&name=12%20Mini%20Battles",
     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbwcvYyOB6uGfk8S_rpiqMXaVp4M9PryD-D305VlkRtWO13Kny4IPRf3Ua&s=10"
   },
   {
     "name": "Among Us",
-    "path": "clamongus.html",
+    "path": "game-template.html?game=clamongus.html&name=Among%20Us",
     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlGpEgaRPVx6KdzR5GA1W4gv_WEpzl79XivrcPGrQZau1BdsSuUNy5bJk&s=10"
   },
   {
     "name": "Geometry Dash",
-    "path": "gd.html",
+    "path": "game-template.html?game=gd.html&name=Geometry%20Dash",
     "image": "https://geometrygame.org/data/image/posts/geometry-dash-feature-image.jpg"
   }
 ]
