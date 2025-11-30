@@ -8,14 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameLink.href = game.path;
                 gameLink.classList.add('game');
 
-                const gameImage = document.createElement('img');
-                gameImage.src = game.image;
-                gameImage.alt = game.name;
-
                 const gameTitle = document.createElement('h2');
                 gameTitle.textContent = game.name;
-
-                gameLink.appendChild(gameImage);
                 gameLink.appendChild(gameTitle);
                 gameContainer.appendChild(gameLink);
             });
