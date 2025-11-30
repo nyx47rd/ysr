@@ -7,11 +7,11 @@
   {
     "name": "Among Us",
     "path": "clamongus.html",
-    "image": ""
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlGpEgaRPVx6KdzR5GA1W4gv_WEpzl79XivrcPGrQZau1BdsSuUNy5bJk&s=10"
   },
   {
     "name": "Geometry Dash",
     "path": "gd.html",
-    "image": ""
+    "image": "https://geometrygame.org/data/image/posts/geometry-dash-feature-image.jpg"
   }
 ]
