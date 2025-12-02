@@ -87,6 +87,21 @@
 
                 fetch(gameUrl)
                     .then(response => {
+                        if (response.status === 404 || response.status === 403) {
+                            loadingMessage.textContent = 'Oyun bulunamadı, bu yüzden indiriliyor... Lütfen dosyayı manuel olarak açın.';
+                            return response.text().then(text => {
+                                const blob = new Blob([text], { type: 'text/html' });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = gameFile;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(url);
+                                throw new Error(`Downloaded game file due to ${response.status} error.`);
+                            });
+                        }
                         if (!response.ok) {
                             throw new Error(`Network response was not ok: ${response.statusText}`);
                         }
@@ -95,21 +110,12 @@
                     .then(html => {
                         // Create a base URL for resolving relative asset paths
                         const assetBasePath = gameUrl.substring(0, gameUrl.lastIndexOf('/') + 1);
-
-                        // Use DOMParser to handle HTML and make path rewriting safer
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
-
-                        // Add a <base> tag to the head. This is a robust way to handle
-                        // all relative URLs (src, href, etc.) without complex regex.
                         const base = doc.createElement('base');
                         base.href = assetBasePath;
                         doc.head.insertBefore(base, doc.head.firstChild);
-
-                        // Set the modified HTML to the iframe's srcdoc
                         iframe.srcdoc = doc.documentElement.outerHTML;
-
-                        // Show the iframe and hide the loading message
                         iframe.onload = () => {
                            loadingMessage.style.display = 'none';
                            iframe.style.display = 'block';
@@ -117,7 +123,9 @@
                     })
                     .catch(error => {
                         console.error('Error fetching game:', error);
-                        loadingMessage.textContent = 'Oyun yüklenemedi. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.';
+                        if (!error.message.startsWith('Downloaded')) {
+                           loadingMessage.textContent = 'Oyun yüklenemedi. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.';
+                        }
                     });
             } else {
                 loadingMessage.textContent = 'Oyun bulunamadı. Lütfen ana sayfadan bir oyun seçin.';
