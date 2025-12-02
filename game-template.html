@@ -51,10 +51,19 @@
         }
         #loading-message {
             display: flex;
+            flex-direction: column; /* Allow link to appear below text */
             justify-content: center;
             align-items: center;
             height: 100%;
             font-size: 24px;
+            text-align: center;
+            padding: 20px;
+        }
+        #loading-message a {
+            color: #a1c8ff;
+            margin-top: 20px;
+            font-size: 20px;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -77,40 +86,87 @@
 
             const iframe = document.getElementById('game-frame');
             const loadingMessage = document.getElementById('loading-message');
+            const MAX_FILE_SIZE_MB = 50;
 
             if (gameName) {
                 document.title = decodeURIComponent(gameName);
             }
 
             if (gameFile) {
-                const gameUrl = `https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/${encodeURIComponent(gameFile)}`;
+                const cdnUrl = `https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/${encodeURIComponent(gameFile)}`;
+                const githubRawUrl = `https://raw.githubusercontent.com/bubbls/ugs-singlefile/main/UGS-Files/${encodeURIComponent(gameFile)}`;
 
-                fetch(gameUrl)
+                const showDownloadLink = (message) => {
+                    loadingMessage.innerHTML = `
+                        <span>${message}</span>
+                        <a id="download-link" href="${githubRawUrl}" download="${gameFile}">
+                            Oyunu İndir
+                        </a>`;
+                };
+
+                fetch(cdnUrl, { method: 'HEAD' })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                            if (response.status === 404 || response.status === 403) {
+                                showDownloadLink('Oyun CDN\'de bulunamadı. Lütfen güvenilir kaynaktan indirin.');
+                                return;
+                            }
+                            throw new Error(`Network response was not ok: ${response.statusText}`);
                         }
-                        return response.text();
-                    })
-                    .then(html => {
-                        const assetBasePath = gameUrl.substring(0, gameUrl.lastIndexOf('/') + 1);
 
-                        // Regex to find relative paths in src and href attributes and make them absolute
-                        let modifiedHtml = html.replace(/(src|href)\s*=\s*"(?!https?:\/\/|\/)([^"]*)"/gi, `$1="${assetBasePath}$2"`);
-                        modifiedHtml = modifiedHtml.replace(/(src|href)\s*=\s*'(?!https?:\/\/|\/)([^']*)'/gi, `$1='${assetBasePath}$2'`);
+                        const contentLength = response.headers.get('Content-Length');
+                        if (contentLength) {
+                            const fileSizeMB = parseInt(contentLength, 10) / 1024 / 1024;
+                            if (fileSizeMB > MAX_FILE_SIZE_MB) {
+                                const sizeMessage = `Bu oyun (${fileSizeMB.toFixed(2)} MB) tarayıcıda açılamayacak kadar büyük.<br>Oynamak için lütfen indirin.`;
+                                showDownloadLink(sizeMessage);
+                                return;
+                            }
+                        }
 
-                        iframe.srcdoc = modifiedHtml;
-                        loadingMessage.style.display = 'none';
-                        iframe.style.display = 'block';
+                        loadGame(cdnUrl);
                     })
                     .catch(error => {
-                        console.error('Error fetching game:', error);
-                        loadingMessage.textContent = 'Oyun yüklenemedi.';
+                        console.error('Error checking file size, attempting to load game directly:', error.message);
+                        loadGame(cdnUrl);
                     });
+
+                const loadGame = (urlToLoad) => {
+                    fetch(urlToLoad)
+                        .then(response => {
+                            if (response.status === 404 || response.status === 403) {
+                                showDownloadLink('Oyun yüklenemedi. Lütfen güvenilir kaynaktan indirin.');
+                                throw new Error(`Download link shown due to ${response.status} error.`);
+                            }
+                            if (!response.ok) {
+                                throw new Error(`Network response was not ok: ${response.statusText}`);
+                            }
+                            return response.text();
+                        })
+                        .then(html => {
+                            const assetBasePath = urlToLoad.substring(0, urlToLoad.lastIndexOf('/') + 1);
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const base = doc.createElement('base');
+                            base.href = assetBasePath;
+                            doc.head.insertBefore(base, doc.head.firstChild);
+                            iframe.srcdoc = doc.documentElement.outerHTML;
+                            iframe.onload = () => {
+                               loadingMessage.style.display = 'none';
+                               iframe.style.display = 'block';
+                            };
+                        })
+                        .catch(error => {
+                            console.error('Error fetching game:', error);
+                            if (!error.message.startsWith('Download')) {
+                               loadingMessage.textContent = 'Oyun yüklenemedi. İnternet bağlantınızı kontrol edin.';
+                            }
+                        });
+                };
+
             } else {
                 loadingMessage.textContent = 'Oyun bulunamadı. Lütfen ana sayfadan bir oyun seçin.';
             }
         });
-    </script>
-</body>
+    </script></body>
 </html>
