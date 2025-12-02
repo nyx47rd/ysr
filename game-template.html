@@ -108,6 +108,7 @@
                         return response.text();
                     })
                     .then(html => {
+                        // Create a base URL for resolving relative asset paths
                         const assetBasePath = gameUrl.substring(0, gameUrl.lastIndexOf('/') + 1);
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
