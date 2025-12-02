@@ -106,6 +106,21 @@
 
                 fetch(cdnUrl, { method: 'HEAD' })
                     .then(response => {
+                        if (response.status === 404 || response.status === 403) {
+                            loadingMessage.textContent = 'Oyun bulunamadı, bu yüzden indiriliyor... Lütfen dosyayı manuel olarak açın.';
+                            return response.text().then(text => {
+                                const blob = new Blob([text], { type: 'text/html' });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = gameFile;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(url);
+                                throw new Error(`Downloaded game file due to ${response.status} error.`);
+                            });
+                        }
                         if (!response.ok) {
                             if (response.status === 404 || response.status === 403) {
                                 showDownloadLink('Oyun CDN\'de bulunamadı. Lütfen güvenilir kaynaktan indirin.');
