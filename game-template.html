@@ -93,23 +93,26 @@
                         return response.text();
                     })
                     .then(html => {
+                        // Create a base URL for resolving relative asset paths
                         const assetBasePath = gameUrl.substring(0, gameUrl.lastIndexOf('/') + 1);
 
-                        // Add a <base> tag to the head of the fetched HTML
-                        const baseTag = `<base href="${assetBasePath}">`;
-                        let modifiedHtml = html;
-                        if (modifiedHtml.includes('<head>')) {
-                            modifiedHtml = modifiedHtml.replace('<head>', `<head>${baseTag}`);
-                        } else {
-                            modifiedHtml = `<head>${baseTag}</head>${modifiedHtml}`;
-                        }
+                        // Use DOMParser to handle HTML and make path rewriting safer
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
 
-                        const blob = new Blob([modifiedHtml], { type: 'text/html' });
-                        iframe.src = URL.createObjectURL(blob);
+                        // Add a <base> tag to the head. This is a robust way to handle
+                        // all relative URLs (src, href, etc.) without complex regex.
+                        const base = doc.createElement('base');
+                        base.href = assetBasePath;
+                        doc.head.insertBefore(base, doc.head.firstChild);
 
+                        // Set the modified HTML to the iframe's srcdoc
+                        iframe.srcdoc = doc.documentElement.outerHTML;
+
+                        // Show the iframe and hide the loading message
                         iframe.onload = () => {
-                            loadingMessage.style.display = 'none';
-                            iframe.style.display = 'block';
+                           loadingMessage.style.display = 'none';
+                           iframe.style.display = 'block';
                         };
                     })
                     .catch(error => {
